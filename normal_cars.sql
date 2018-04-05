@@ -20,38 +20,39 @@ CREATE TABLE vehicle_make (
     make_code varchar(125) NOT NULL,
     make_title varchar(125) NOT NULL
 );
-
 CREATE TABLE vehicle_model (
     model_id serial NOT NULL PRIMARY KEY,
     model_code varchar(125) NOT NULL,
     model_title varchar(125) NOT NULL,
     model_make_id integer NOT NULL REFERENCES vehicle_make(make_id)
 );
-
 CREATE TABLE vehicle_year (
     date_id serial NOT NULL PRIMARY KEY,
     year NUMERIC(4,0) NOT NULL,
     year_model_id integer NOT NULL REFERENCES vehicle_model(model_id)
 );
+INSERT INTO vehicle_make (make_code,make_title)
+SELECT DISTINCT make_code, make_title FROM car_models;
+INSERT INTO vehicle_model (model_code,model_title, model_make_id)
+SELECT DISTINCT model_code, model_title, vehicle_make.make_id FROM car_models 
+JOIN vehicle_make USING (make_code) ;
 
-INSERT INTO vehicle_make(make_code,make_title)
-SELECT DISTINCT make_code,make_title FROM car_models;
-
-INSERT INTO vehicle_model(model_code,model_title, model_make_id)
-SELECT DISTINCT model_code,model_title,vehicle_make.make_id FROM car_models
-JOIN vehicle_make USING (make_code); 
-
-INSERT INTO vehicle_year(year,year_model_id)
-SELECT DISTINCT year,vehicle_model.model_id FROM car_models
-JOIN vehicle_model USING (model_code);
-
-
+INSERT INTO vehicle_year (year,year_model_id)
+SELECT DISTINCT year, vehicle_model.model_id FROM car_models
+JOIN vehicle_model USING (model_code) ;
 -- 1. In `normal_cars.sql` Create a query to get a list of all `make_title` values in the `car_models` table. Without any duplicate rows, this should have 71 results.
 SELECT DISTINCT make_title FROM vehicle_make;
-
-
 -- 1. In `normal_cars.sql` Create a query to list all `model_title` values where the `make_code` is `'VOLKS'` Without any duplicate rows, this should have 27 results.
-
+SELECT DISTINCT model_title FROM vehicle_model 
+JOIN vehicle_make ON vehicle_make.make_id = vehicle_model.model_make_id
+WHERE vehicle_make.make_code LIKE '%VOLKS%';
 -- 1. In `normal_cars.sql` Create a query to list all `make_code`, `model_code`, `model_title`, and year from `car_models` where the `make_code` is `'LAM'`. Without any duplicate rows, this should have 136 rows.
-
+SELECT DISTINCT make_code, model_code, model_title, year FROM vehicle_year 
+JOIN vehicle_model ON vehicle_model.model_id = vehicle_year.year_model_id 
+JOIN vehicle_make ON vehicle_make.make_id = vehicle_model.model_make_id
+WHERE vehicle_make.make_code LIKE '%LAM%';
 -- 1. In `normal_cars.sql` Create a query to list all fields from all `car_models` in years between `2010` and `2015`. Without any duplicate rows, this should have 7884 rows.
+SELECT DISTINCT * FROM vehicle_year
+JOIN vehicle_model ON vehicle_model.model_id = vehicle_year.year_model_id
+JOIN vehicle_make ON vehicle_make.make_id = vehicle_model.model_make_id
+WHERE year BETWEEN 2010 AND 2015;
